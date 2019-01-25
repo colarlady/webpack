@@ -1589,12 +1589,14 @@ wepack四个核心要素：
 
 # webpack环境配置
 
-- 搭建本地开发环境
+## 搭建本地开发环境
 
-  - 为什么要搭建本地开发环境
-  - 因为正常我们的项目是运行在web服务器上的，而不是我们本地调试的这种方式
 
-  三种种实现方式
+
+- 为什么要搭建本地开发环境
+- 因为正常我们的项目是运行在web服务器上的，而不是我们本地调试的这种方式
+
+三种种实现方式
 
 - webpack - watch
 
@@ -1650,8 +1652,66 @@ wepack四个核心要素：
       "scripts":{
           "server":"webpack-dev-server --open"
       }
+      ```
+
+
+
 
       //webpack.config.js文件中
+
+
+      //开启sourceMap在webpack中对代码进行调试
+      //将生成的代码和原来的代码做一个映射
+      // JS SourceMap
+      	//配置devtool
+      		//devtool有7个参数
+      		//开发环境
+      			//eval
+                   //eval-source-map
+      			//cheap-eval-source-map
+      			//cheap-module-source-map
+      			//每一个的运算时间不一样
+      		//生产环境
+      			//source-map
+      			//hidden-source-map
+      			//nosource-source-map
+    
+      //开发的时候的需要选择：cheap-module-source-map
+      devtool：'eval',
+      // Css SourceMap
+      	//除了设置sourceMap之外对于样式还需要对对应的loader的sourceMap
+      	//css-loader.option.sourceMap
+      	//less-loader.option.sourceMap
+      	//sass-loader.option.sourceMap
+       module:{
+           rules:[
+               {
+                   test:/\.css$/,
+                   use:[
+                       {
+                           loader:'style-loader',
+                           options:{
+                               sourceMap:true
+                           }
+                       },{
+                           loader:'css-loader',
+                           options:{
+                               sourceMap:true
+                           }
+                       },{
+                           loader:'sass-loader',
+                           options:{
+                               sourceMap:true
+                           }
+                       }
+                      
+                   ]
+               }
+           ]
+      },
+
+
+​          
       devServer：{
           port:9001,
           inline:true ,//默认值是true，如果为false则在页面顶部会有一条显示打包进度的信息显示
@@ -1702,21 +1762,592 @@ wepack四个核心要素：
               },
                   
               //模块热更新
+                  //优点：
+                  	//节省调试时间
+                  	//样式调试更快
+                  	//保持应用数据状态
+                 //设置hot属性
+                 //借助插件
+                  	//webpack.HotModuleReplacementPlugin
+                  	//webpack.NamedModulesPlugin  查看模块的具体名称
+                  //代码中，
+                  	//通过module.hot接口
+                  	// module.hot.accept 接口
+                  	//css中代码的热更新借助于style-loader就会自动帮助你热更新
+                  	//js中的代码热更新有时候需要自己写代码，框架中有一些loader会帮助对代码进行热更新
+                  //需要设置
+                  //plugins:[
+          		//{	
+             		 	//new webpack.HotModuleReplacementPlugin(),
+              	  	//new webpack.NamedModulesPlugin()
+          		//}
+      		   //]
+                hot:true,
+                hotonly:true
       }
+
       ```
 
-
-
-
-      //使用命令
-      npm run server
-      ```
-    
-    - ​
+```
+  //使用命令
+  npm run server
+```
 
 - Express +webpack-dev-middleware
 
+## Eslint检查语法
+
+- 开发时候我们需要统一开发代码风格
+
+- Eslint使得devServer支持每一次我们代码提交时进行书写规范的检查，代码不符合规范不通过编译
+
+- 安装
+
+  - eslint-loader
+
+    - 配置options
+      - failOnWarning：true 当出现规范警告时编译不通过
+      - failOnWarning：true 当出现规范错误时编译不通过
+      - formatter:设置第三方错误输出方式
+      - outputReport：输出代码检查报告
+
+  - eslint-plugin-html(当js代码以script标签的形式内嵌在html中时也需要规范检查时)
+
+  - eslint-friendly-formatter  错误信息输出的格式
+
+  - devServer.overlay:在浏览器显示错误
+
+  - 安装栗子
+
+    - ```shel
+      cnpm install eslint-loader eslint-plugin-html eslint-friendly-formatter --save-dev
+      ```
+
+    ​
+
+    ​
+
+- 配置
+
+  - 在webpack.config中配置
+
+    - ```javascript
+      {
+          test:/\.js$/,
+          include:[path.reslove(__dirname,'src')],
+          exclude:[path.reslove(__dirname,'lib')],
+          use:[
+             	 {
+                  loader:'babel-loader',
+                  options:{
+                       presets:['env']
+                   }
+               },
+              {	
+                  loader:'eslint-loader',
+                  options:{
+                      formatter:require(' eslint-friendly-formatter')
+                  }      
+              }]
+      }
+      ```
+
+  - 配置一个.eslintrc.*的文件
+
+    - 写一些代码规范
+
+    - ```javascript
+      //新建文件.eslintrc.js文件
+      module.exports = {
+          root:true,
+          extends:'standard',
+          plugins:[],
+          globals:{
+              //全局变量
+            "$":true  
+          },
+          env：{
+          	//环境
+          	browser:true,
+          	node:true
+      	}，
+          rules:{
+              //自定义的需要覆盖standard标准的规范规则
+              //第一个值表示错误的严重性
+              indent:["error",4]，
+              "eol-last":["error",none]
+              
+          }
+      }
+      ```
+
+    - ​
+
+  - Javascript Standard Style（代码规范）
+
+    - 遵循这种规范的话需要安装以下插件
+      - eslint-config-satndard
+      - eslint-plugin-promise
+      - eslint-plugin -satndard
+      - eslint-plugin-import
+      - eslint-plugin-node
+      - 安装`cnpm install eslint-config-satndard eslint-plugin-promise eslint-plugin-standard eslint-plugin-import eslint-plugin-node --save-dev` 
+
+## 区分开发环境和生产环境
+
+- 开发环境
+
+  - 模块热更新
+  - sourceMap
+  - 代码规范检查
+  - 接口代理
+
+- 生产环境
+
+  - 提取公用代码
+  - 压缩混淆
+  - 文件压缩或者base64
+  - three shaking 去除多余代码
+
+- 共同点
+
+  - 同样的入口
+  - 同样的代码处理（什么类型的文件使用什么loader处理）
+  - 同样的解析配置
+
+- 如何区分
+
+  - webpack-merge
+    - webpack.dev.conf.js
+    - webpack.prod.conf.js
+    - webpack.common.conf.js
+
+- 栗子
+
+  - 安装`webpack-merge`
+
+    - `cnpm install webpack-merge --save-dev`
+
+  - 修改package.json做配置
+
+    - ```javascript
+      "scripts":{
+          "build":"webpack --env production --config build/webpack.dev.conf.js",
+          "server":"webpack-dev-server --env development --open --config build/webpack.common.conf.js"
+          
+      }
+      ```
+
+  - 在项目根目录下新建build文件夹来存放所有的webpack配置
+
+    - webpack.common.conf.js
+
+      - ```javascript
+        var productionConfig = require('./webpack.prod.conf.js')
+        var developmentConfig = require('./webpack.dev.conf.js')
+
+        var merge = require('webpack-merge')
+        var ExtractTextWebpackPlugin = require('extract-text-webpack-plugin')
+        var path = require('path')
+        var webpack = require('webpack')
+        var htmlWebpackPlugin = require('html-webpack-plugin')
+        ```
+
+
+        const generateConfig = env=> {
+            
+            //引入文件
+            const extractLess = new ExtractTextWebpackPlugin({
+                filename:'css/[name]-bundle-[hash:5].css'
+            })
+            
+            //提取loader
+            
+            //处理.js文件的loader
+            //关于babel的配置可以放在.babelrc文件中
+            const scriptLoader = [loader:'babel-loader'].contact(env==='production?								[]:[{
+                                            loader:'eslint-loader',    
+                                            options:{
+                                                  formatter:require('eslint-friendly-formatter')              
+                                             }
+                                        }]
+                                  )
+             
+            //处理样式相关的文件
+            //开发环境使用style-loader打包,生产环境需要借助插件ExtractTextPlugin
+              const cssLoaders = [
+                 					{
+                      					loader:'css-loader',
+                                          options:{
+                                            importLoaders:2,
+                                            sourceMap:env==='development'
+                                         }
+                                    },{
+                                        loader:'postcss-loader',
+                                        options:{
+                                            ident:'css',
+                                            sourceMap:env==='development',
+                                            plugins:[
+                                                require('postcss-cssnext')()
+                                            ].contact(env==="development"?
+                                            [require('postcss-sprites')({       		
+                                                spritePath:'dist/assets/imgs/sprites',
+                                                   retina:true                         
+                                                })]:[])
+                                        }
+                                    },{
+                                     	loader:'less-loader',
+                                        options:{
+                                            sourceMap:env==='development'
+                                        }
+                                    }
+                                  ]
+               const styleloader = env==="production"?extractLess({
+                                      fallback:'style-loader',
+                   					 use:cssLoaders
+              					 }):['style-loader'].contact(cssLoaders);
+            
+            //配置图片，字体等文件的laoder
+        	const fileLoader = env==='development'?[
+            	{
+                	loader:'file-loader',
+                    options:{
+                        name:'[name]-[hash:5].[ext]',
+                        output:'assets/imgs/'
+                    }
+            	}
+            ]:[
+                {
+                    loader:'url-loader',
+                    options:{
+                        name:'[name]-[hash:5].[ext]',
+                        limit:1000,
+                        outputPath:'assets/imgs/'
+                    }
+                }
+            ]
+
+
+            // 返回一个配置对象
+            return {
+           			entry：{
+                		app:'src/app.js'
+        			}，
+            		output:{
+           		     	path:path.resolve(__dirname,'dist'),
+                         publicPath:'/',
+                         filename:'js/[name]-bundle-[hash:5].js'
+            		},
+                     resolve:{
+                         alias:{
+                             jquery$:path.resolve(__dirname,'../src/libs/jquery.min.js')
+                         }  
+                     },
+                     module:{
+                         rules:[
+                             {
+                             	test:/\.js$/,
+                                 include:[path.resolve(__dirname,'src')],
+                                 exclude:[path.resolve(__dirname,'src/libs/')],
+                                 use:scriptLoader
+                         	 },
+                             {	
+                                 test:/\.css$/,
+                                 use:styleLoader  
+                             },
+                             {
+                                 test:/\.(png|jpg|jpeg|gif)$/,
+                                 use:fileLoader.contact(
+                                     env==="production"?{
+                                        loader:'img-loader',
+                                         options:{
+                                             pngquant:{
+                                                 quanity:80
+                                             }
+                                         }
+                                     }:[]
+                                 )
+                             },
+                             {
+                                 test:/\.(eot|woff2?|ttf|svg)$/,
+                                 use:fileLoader
+                             }
+                         ]       
+                      },
+                      plugins:[
+                          extractLess,
+                          new htmlWebpackPlugin({
+                              filename:'index.html',
+                              template:'./index.html',
+                              minify:{
+                                  collapseWhitespace:true
+                              }
+                          }),
+                          new webpack.ProvidePlugin({
+                              $:'jquery'
+                          })
+                       ]
+        	}
+        }
+    
+        module.exports = env=>{
+            let config = env ==='production'? productionConfig :developmentConfig
+            return merge(generate(env),config);
+        }
+    
+        ```
+    
+    - webpack.prod.conf.js
+    
+      - ```javascript
+        var webpack = require('webpack')
+        var PurifyWebpack = require('purifycss-webpack')
+        var  HtmlInLinkChunkPlugin = require('html-webpack-inline-chunk-plugin')
+        var CleanWebpackPlugin = require('clean-webpack-plugin')
+    
+        var path = require('path')
+        var glob = require('glob-all')
+        module.exports = {
+            plugins:[
+                new PurifyWebpack({
+                    path:glob.sync([
+                        './*.html',
+                        './src/*.js'
+                    ])
+                }),
+                new webpack.optimize.CommonsChunkPlugin({
+                    name:'mainfest'
+                }),
+                new HtmlInLinkChunkPlugin({
+                    inlineChunks：['mainfest']
+                }),
+                new  webpack.optimize.UglifyJsPlugin(),
+                new CleanWebpackPlugin(["dist"])
+            ]
+        }
+        ```
+    
+      - ​
+    
+    - webpack.dev.conf.js
+    
+      - ```javascript
+    
+        const webpack = require('webpack')
+        module.exports = {
+          
+                devtool:'cheap-module-source-map',
+                devServer:{
+                	port:9001,
+                	overlay:true,
+                	proxy:{
+                		'/api':{
+                        target:'http://m.weibo.cn',
+                        changeOrigin:true,
+                        logLevel:'debug',
+                        headers:{
+                                "Cookies": sdsjdbjs
+                                //...还有其他参数
+                        }
+                    }
+               		 },
+                	hot:
+                	hotonly:true,
+                	historyApiFallBack:{
+                		 rewrites:[
+                   					 {
+                       					 form:'/pages/a',
+                       					 to:'/pages/a.html'
+                    				},
+                    				{
+                        				from:/^\/([a-zA-Z0-9]+\/?)([a-zA-Z0-9]+)/,
+                       					 to:function(context){
+                            			return "/"+context.match[1]+context.match[2]+".html";
+                        			}
+                    		}]
+                	}
+                },
+                    plugins:[
+                        new webpack.HotModuleReplacementPlugin(),
+                        new webpack.NamedModulesPlugin()
+                    ]
+            
+        }
+        ```
+
+## webpack 实战
+
+- 分析打包结果
+
+  - 官方提供的打包分析工具,产生一个json文件，在http://webpack.github.io/analyse/可以上传生成的文件进行可视化的分析
+
+    - mac中
+      - `webpack  --profile --json >stats.json`
+    - windows中
+      - `webpack --profile --json |Out-file'stats.json' -Encoding OEM`
+
+  - 社区提供的打包分析工具
+
+    - 插件 BundleAnalyzerPlugin
+
+      - 安装
+
+        - `cnpm install webpack-bundle-analyzer --save-dev`
+
+      - 配置
+
+        - ```javascript
+          var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').webpack-bundle-analyzer
+
+          plugins:[
+              new BundleAnalyzerPlugin()
+          ]
+          ```
+
+        - webpack打包之后自动从浏览器弹出一个分析页面
+
+    - 命令行 webpack-bundle-analyzer stats.json  分析stats.json
+
+- 优化打包速度
+
+  - 影响打包速度的因素
+
+    - 文件多？
+    - 依赖多？
+    - 页面多？
+    - 使用loader是否合适？
+    - 使用操作耗时的编译方式？
+
+  - 如何优化
+
+    - 区分第三方代码(vender)和业务代码(app)
+
+      - 将第三方代码的打包和业务代码的打包区分开
+
+        - 借助插件DllPlugin打包第三方代码生成一个map(映射关系),
+        - 借助插件DllReferencePlugin打包业务代码引用映射
+
+      - 例子
+
+        - ```javascript
+          // 新建dll的配置文件 webpack.dll.config.js
+
+          const path = require('path')
+          const webpack = require('webpack')
+          module.exports = {
+              entry:{
+                 vue：["vue","vue-router"] ,
+                  ui:["element-ui"]
+              }，
+              output:{
+              	path：path.join(__dirname,'../src/dll/'),
+              	filename:'[name].dll.js',
+              	library:'[name]'   //定义引用的地方如何引用
+          	},
+              plugins:[
+                  new webpack.DllPlugin({
+                      path：path.join(__dirname,'../src/dll/','[name]-mainfest.json'),
+                      //打包文件输出目录,json文件是map的输出文件
+                      name:[name]
+                  }),
+                  new webpack.optimize.UglifyJsPlugin()
+              ]
+          }	
+
+          webpack build/webpack.dll.conf.js
+
+              webpack.prod.js
+                plugins:[
+                    //引用
+                    new webpack.DllReferencePlugin({
+                        mainfest:require('../src/dll/ui-mainfest.json')
+                    }),
+                    new webpack.DllReferencePlugin({
+                        mainfest:require('../src/dll/vue-mainfest.json')
+                    })
+                ]
+          ```
+
+    - 上线前压缩和混淆代码（UglyfiJsPlugin）
+
+      - 设置属性parallel:并行处理
+
+      - ```javascript
+         new UglyfiJsPlugin({
+                uglyfiOptions:{
+                    compress:{
+                        warning:false
+                    }
+                },
+                sourceMap:config.build.productionSourceMap,
+                parallel:true,
+                cache:true
+            })
+        ```
+
+    - HappyPack插件
+
+      - 给loader使用，串行处理变成并行的
+
+      - 线程池
+
+      - 安装
+
+      - 配置
+
+        - `cnpm install happypakck --save-dev`
+
+        - ```javascript
+          plugins:[
+              new HappyPack({
+                  id:'vue',
+                  loaders:[
+                      {
+                          loader:'vue-loader',
+                          option: require('./vue-loader.conf')
+                      }]
+              })
+          ]
+
+
+
+          //使用
+          {
+           
+              test:/\.vue/,
+              loader:'happypack/loader?id=vue',
+              options:vueLoaderConfig
+          }
+          ```
+
+        - ​
+
+    - Babel-loader
+
+      - 开启缓存 cacheDirectory
+      - include：规定babel-loader打包范围
+      - exclude：规定babel-loader打包范围
+
+    - 其他
+
+      - 减少resolve
+        - 去除sourceMap
+        - cache-loader
+        - 升级node和webpack
+
+
+- 长缓存优化
+  - 什么是长缓存优化？
+    - 用户发起请求，服务器对请求的资源的头部进行设置来告诉请求的浏览器有些资源是一段时间内都不会更新的，不用每次都请求
+  - webpack如何实长缓存
+    - ​
+- webpack多页面应用
+
+  - ​
+
 # Webpack和Vue
+
+
 
 # webpack 面试常见问题
 
