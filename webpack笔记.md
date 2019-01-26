@@ -1,12 +1,50 @@
 # 为什么要有构建？
 
+- 开发分工的变化
 
+  - 前端负责的工作越来越多，文件可能越来越多
+  - 以前前端开发和后台开发
+    - 前端：View + View Logic
+    - 后端:  Router Render DataLogic  DataBase
+  - 现在前端开发和后台开发
+    - 前端：View+View Logic+Router+Render+Data-Logic
+    - 后端：DataLogic  +API+DataBase
+
+- 框架的变化
+
+  - JS库-----MVC ---MV*
+  - JS库：提供方法解决浏览器之间兼容问题
+  - MVC:backbone.js+underscore.js+jquery  已经有模块化和分层的思想
+  - MVVM：react+Angular+Vue
+  - 模块化开发需要构建
+
+- 语言的变化
+
+  - html1->html5
+  - css1-css3-less/sass/stylus
+  - vbscript---js--ts
+
+- 环境的变化
+
+  - 浏览器---node--移动端
+
+- 社区的变化
+
+  - github+npm
+
+- 工具的变化
+
+  - grunt gulp fis webpack rollup.js
+
+    开发复杂化，框架去中心化（一个包解决一个问题）
 
 # 为什么选择Webpack？
 
+- vue-cli react-restart  webpack-cli
+- 代码分割
+- 天生模块化等等
+
 # 模块化开发
-
-
 
 ## js模块化
 
@@ -1659,7 +1697,6 @@ wepack四个核心要素：
 
       //webpack.config.js文件中
 
-
       //开启sourceMap在webpack中对代码进行调试
       //将生成的代码和原来的代码做一个映射
       // JS SourceMap
@@ -1709,7 +1746,6 @@ wepack四个核心要素：
                }
            ]
       },
-
 
 ​          
       devServer：{
@@ -1785,7 +1821,7 @@ wepack四个核心要素：
                 hot:true,
                 hotonly:true
       }
-
+    
       ```
 
 ```
@@ -2026,7 +2062,6 @@ wepack四个核心要素：
                     }
                 }
             ]
-
 
             // 返回一个配置对象
             return {
@@ -2283,6 +2318,9 @@ wepack四个核心要素：
                 parallel:true,
                 cache:true
             })
+         ```
+        ```
+
         ```
 
     - HappyPack插件
@@ -2308,6 +2346,7 @@ wepack四个核心要素：
                       }]
               })
           ]
+          ```
 
 
 
@@ -2319,37 +2358,262 @@ wepack四个核心要素：
               options:vueLoaderConfig
           }
           ```
-
+    
         - ​
-
+    
     - Babel-loader
-
+    
       - 开启缓存 cacheDirectory
       - include：规定babel-loader打包范围
       - exclude：规定babel-loader打包范围
-
+    
     - 其他
-
+    
       - 减少resolve
         - 去除sourceMap
         - cache-loader
         - 升级node和webpack
 
-
 - 长缓存优化
   - 什么是长缓存优化？
     - 用户发起请求，服务器对请求的资源的头部进行设置来告诉请求的浏览器有些资源是一段时间内都不会更新的，不用每次都请求
+    - 每一个资源带有自己的版本号，版本号没有发生变化的时候可以不需要更新
   - webpack如何实长缓存
-    - ​
+    - 场景 app+vendor
+
+      - app改变，vendor不变化
+
+        - app和vendor分开分别打包
+
+        - hash换成chunkhash
+
+        - 提取webpack runtime（webpack runtime的改变也会影响vendor）
+
+        - 配置
+
+          - ```javascript
+            const path = require('path')
+            const webpack = require('webpack')
+
+            module.exports ={
+                entry:{
+                    main:'./src/foo',
+                    vendor:['react']
+                },
+                output:{
+                    path:path.resolve(__dirname,'dist'),
+                    filename:[name].[chunkhash:8].js
+                },
+                plugins:[
+                    new webpack.optimize.CommonsChunkPlugin({
+                        name:'vendor'
+                    }),
+                    new webpack.optimize.CommonsChunkPlugin({
+                        name:'mainfest'
+                    })
+                ]
+            } 
+            ```
+
+    - 场景 引入新模块，模块顺序变化，vendor hash变化
+
+      - 因为webpack在打包的时候会为每一个chunk随机分配一个id，一旦引入的顺序变化对应的id也会变化，那么对应chunkhash也会变化
+
+      - 解决办法:使用NamedChunksPlugin和NamedModulesPlugin
+
+      - ```javascript
+        plugins:[
+            new webpack.NamedChunksPlugin(),
+            new webpack.NamedModulesPlugin()
+        ]
+        ```
+
+    - 场景 动态引入模块时，vendor hash变化
+
+      - 这个场景最新的webpack版本已经避免了
 - webpack多页面应用
 
-  - ​
+  - vue等框架通常是开发单页面应用程序
+
+  - 多页面应用
+
+    - 多个entry
+    - 多页面html
+    - 每个页面不同的chunk（每一个页面引入不同的js和css）
+    - 每个页面有不同参数
+
+  - 解决方案
+
+    - 多页面多配置(每一个页面一个配置)
+
+      - 优点
+
+        - 可以使用parallel-webpack来提高打包的速度
+        - 配置更加独立与灵活
+
+      - 缺点
+
+        - 不能多页面之间共享代码
+
+      - 配置：
+
+        - 安装
+
+          - `cnpm install webpack-merge webpack  --save--dev`
+          - `cnpm install html-webpack-plugin --save--dev`
+          - ` cnpm install clean-webpack-plugin --save--dev`
+          - `cnpm install extract-text-webpack-plugin --save--dev`
+          - `cnpm install webpack-merge --save-dev`
+          - `cnpm install style-loader --save-dev`
+          - `cnpm install css-loader --save-dev`
+
+        - ```javascript
+          //webpack.config.js
+          const merge = require('webpack-merge')
+          const webpack = require('webpack')
+          const htmlWebpackPlugin = require('html-webpack-plugin')
+          const CleanWebpack = require('clean-webpack-plugin')
+          const ExtractTextWebpackPlugin = requrie('extract-text-webpack-plugin')
+
+          const path = reuqire('path')
+
+          const baseConfig = {
+              entry:{
+                  react:['react']
+              },
+              output:{
+                  path:path.resolve(__dirname,'dist'),
+                  filename:'js/[name].[chunkhash].js'
+              },
+              module:{
+                  rules:[
+                      {
+                          test:/\.css/,
+                          use:ExtractTextWebpackPlugin.extract({
+                             fallback:'style-loader',
+                              use:'css-loader'
+                          })
+                      }
+                  ]
+              },
+              plugins:[
+                  new CleanWebpack(path.resolve(__dirname,'dist')),
+                  new webpack.optimize.CommobChunkPlugin({
+                      name:'react',
+                      minChunks:Inifinity
+                  }),
+                  new ExtractTextWebpackPlugin({
+                      filename:'css/[name].[hash].css'
+                  })
+              ]
+          }
+
+
+          //pages配置函数
+          const generatePage = function({
+              title='',
+              entry='',
+              template='./src/index.html',
+              name='',
+              chunks=[]
+          }=>{}){
+              return {
+                  entry,
+                  plugins:[
+                      new HtmlWebpackPlugin({
+                          chunks,
+                          template,
+                          filename:name+'.html'
+                      })
+                  ]
+              }
+          }
+          const pages = [
+              generatePage({
+              	title：'pageA',
+                  entry：{
+                  	a:'./src/pages/a'
+              	},
+                   name:'a',
+                   chunks:['react','a']
+          	}),
+               generatePage({
+              	title：'pageB',
+                  entry：{
+                  	b:'./src/pages/b'
+              	},
+                   name:'b',
+                   chunks:['react','b']
+          	}),
+               generatePage({
+              	title：'pageC',
+                  entry：{
+                  	c:'./src/pages/c'
+              	},
+                   name:'a',
+                   chunks:['react','c']
+          	})  
+          ]
+
+          //基础配置和pages配置进行merge
+          module.exports = pages.map(page => merge(baseConfig,page))
+
+          ```
+
+          ​
+
+    - 多页面单配置
+
+      - 优点
+
+        - 可以共享各个entry之间的公共代码
+
+      - 缺点
+
+        - 打包速度很慢
+        - 输出内容复杂
+
+      - 配置
+
+        - ```javascript
+          module.exports = merge(baseConfig.contact(pages))
+          ```
 
 # Webpack和Vue
 
-
+- Vue官方脚手架
+  - 安装
+    - `cnpm install vue-cli -g` 
+- 项目模板
+  - ​
+- 配置文件
 
 # webpack 面试常见问题
+
+- 概念
+  - 什么是webpack?和gulp和gunt有什么不同？
+    - webpack是一个模块打包器，他可以递归的打包项目中所有的模块，最后生成几个打包后的文件。
+    - 他和其他工具最大的不同在于他支持代码分割，模块化（ESM，AMD，CommonJs）,全局分析
+  - 什么是bundle?什么是chunk?什么是module?
+    - bundle是webpack打包出来的文件，chunk是webpack进行模块依赖分析的时候代码分割出来的代码块，module是开发中的单个模块
+  - 什么是loader?什么是plugin?
+    - Loaders是告诉webpack如何转化处理某一类型的文件，并且引入到打包的文件中
+    - Plugin是用来自定义webpack打包过程的方式，一个插件含有apply方法的一个对象，通过这个方法可以参与到webpack整个打包的各个流程中
+- 配置
+  - 如何自动生成webpack的配置？
+    - 借助webpack-cli，vue-cli等配置脚手架的东西
+- 开发
+  - webpack的webpack-dev-serve=(express+hotmiddleware)和普通的http服务器如nginx有什么区别?
+    - webpack-dev-server使用内存来存储webpack开发环境下的打包文件，并且可以使用模块热更新，他比传统的http服务对开发更加简单高效
+  - 什么是模块热更新？
+    - 模块热更新是webpack的一个功能，他可以使得代码修改过后不用刷新浏览器就可以更新，是高级的自动刷新浏览器
+- 优化
+  - 什么是长缓存?在webpack中如何做到长缓存？
+    - 浏览器在用户访问页面的时候，为了加快加载速度，会对用户访问的静态资源进行存储，但是代码每一次升级或者更新，都需要浏览器去下载最新的代码，最方便和最新的方式引入新的 文件名称。
+    - 在webpack中可以在output中指定输出的文件指定的chunkhash,并且分离更新的代码和框架代码。
+    - 通过NamedModulesPlugin或者是NamedModuleIdsPlugin使再次打包文件名不变
+  - 什么是Three-Shaking?CSS可以three Shaking?
+    - Tree-Shaking是在打包中去除那些引入了但是在代码中没有用到的死代码。在webpack中Tree-shaking通过uglifyJSPlugin来Tree-ShakingJS,css需要使用Purify-css
 
 
 
